@@ -1,29 +1,39 @@
-FROM fedora:latest
+ARG INDIVER=1.9.4
 
-RUN dnf -y upgrade
+# build environment
+FROM fedora:latest as base
+ARG INDIVER
+RUN dnf -y upgrade \
+  && dnf -y install \
+     curl dcraw wget git openssh redhat-lsb-core vim \
+     libnova cfitsio fftw-libs-double rtl-sdr gsl
 
+FROM base as buildenv
+ARG INDIVER
 RUN dnf -y install \
-        cdbs cmake curl dcraw wget git openssh redhat-lsb-core \
-        libcurl-devel boost-devel cfitsio-devel libtiff-devel \
-        libftdi-devel libgphoto2-devel gpsd-devel gsl-devel libjpeg-turbo-devel \
-        libnova-devel openal-soft-devel LibRaw-devel libusb-devel rtl-sdr-devel \
-        fftw-devel zlib-devel libconfuse-devel python3-devel doxygen \
-        libdc1394-devel python-devel swig gcc-c++ clang vim \
-        libavcodec-devel libavdevice-devel libavformat-devel libavutil-devel
+     cdbs cmake \
+     libcurl-devel boost-devel cfitsio-devel libtiff-devel \
+     libftdi-devel libgphoto2-devel gpsd-devel gsl-devel libjpeg-turbo-devel \
+     libnova-devel openal-soft-devel LibRaw-devel libusb-devel rtl-sdr-devel \
+     fftw-devel zlib-devel libconfuse-devel python3-devel doxygen \
+     libdc1394-devel python-devel swig gcc-c++ clang \
+  && dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
+        https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm \
+  && dnf -y install ffmpeg-devel 
 
-# Install FFMpeg-devel (for webcam driver, through rpmfusion)
-RUN dnf -y install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm \
-        https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm
-        
-RUN dnf -y install ffmpeg-devel
+# build the application
+FROM buildenv as build
+ARG INDIVER
+ENV FLAGS="-DCMAKE_INSTALL_PREFIX=/usr"
+RUN mkdir -p /app/\
+  && curl -SL https://github.com/indilib/indi/archive/refs/tags/v${INDIVER}.tar.gz \
+     | tar --strip-components=1 -xC /app/ \
+  && cmake $FLAGS . ../../ \
+  && make \
+  && make install
 
-# Install googletest
-WORKDIR /home
-RUN git clone https://github.com/google/googletest.git
-WORKDIR /home/googletest
-RUN cmake .
-RUN make install
+FROM base as app
+COPY --from=build /usr .
+ENTRYPOINT ["indiserver"]
+CMD ["--help"]
 
-WORKDIR /home
-ADD https://raw.githubusercontent.com/jochym/indi/master/docker/run-build.sh /home/
-RUN chmod a+x /home/run-build.sh
