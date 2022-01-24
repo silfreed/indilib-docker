@@ -27,7 +27,9 @@ ARG INDIVER
 ENV FLAGS="-DCMAKE_INSTALL_PREFIX=/usr"
 RUN mkdir -p /app/\
   && curl -SL https://github.com/indilib/indi/archive/refs/tags/v${INDIVER}.tar.gz \
-     | tar --strip-components=1 -xC /app/ \
+     | tar --strip-components=1 -xzC /app/ \
+  && mkdir -p /app/build/indi-core \
+  && cd /app/build/indi-core \
   && cmake $FLAGS . ../../ \
   && make \
   && make install
