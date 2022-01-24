@@ -1,0 +1,11 @@
+diff -ruN indi-3rdparty-1.9.4/indi-celestronaux/auxproto.h indi-3rdparty-1.9.4-new/indi-celestronaux/auxproto.h
+--- indi-3rdparty-1.9.4/indi-celestronaux/auxproto.h	2022-01-16 23:16:50.000000000 -0500
++++ indi-3rdparty-1.9.4-new/indi-celestronaux/auxproto.h	2022-01-24 12:24:29.695366178 -0500
+@@ -24,6 +24,7 @@
+ #pragma once
+ 
+ #include <vector>
++#include <cstddef>
+ #include <stdint.h>
+ 
+ typedef std::vector<uint8_t> AUXBuffer;
