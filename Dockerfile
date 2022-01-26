@@ -54,8 +54,8 @@ RUN mkdir -p /app3p/ \
   && make install
 
 FROM base as app
-COPY --from=build /usr/bin /usr/bin
-COPY --from=build /usr/lib /usr/lib
+COPY --from=build /usr /usr
+COPY --from=build /etc /etc
 ENTRYPOINT ["indiserver"]
 CMD ["--help"]
 
