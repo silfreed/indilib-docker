@@ -1,0 +1,12 @@
+diff --git a/indi-duino/libfirmata/src/firmata.h b/indi-duino/libfirmata/src/firmata.h
+index e3d8015f..9248a450 100644
+--- a/indi-duino/libfirmata/src/firmata.h
++++ b/indi-duino/libfirmata/src/firmata.h
+@@ -12,6 +12,7 @@
+ */
+ 
+ #include <vector>
++#include <ctime>
+ #include <stdint.h>
+ #include <arduino.h>
+ 
