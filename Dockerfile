@@ -1,4 +1,4 @@
-ARG INDIVER=1.9.4
+ARG INDIVER=1.9.8
 
 # build environment
 FROM fedora:latest as base
@@ -13,6 +13,7 @@ FROM base as buildenv
 ARG INDIVER
 RUN dnf -y install \
      cdbs cmake \
+     libev-devel \
      libcurl-devel boost-devel cfitsio-devel libtiff-devel \
      libftdi-devel libgphoto2-devel gpsd-devel gsl-devel libjpeg-turbo-devel \
      libnova-devel openal-soft-devel LibRaw-devel libusb-devel rtl-sdr-devel \
@@ -28,7 +29,7 @@ FROM buildenv as build
 ARG INDIVER
 ENV FLAGS="-DCMAKE_INSTALL_PREFIX=/usr"
 RUN mkdir -p /app/ \
-  && curl -SL https://github.com/indilib/indi/archive/refs/tags/v${INDIVER}.tar.gz \
+  && curl -sSL https://github.com/indilib/indi/archive/refs/tags/v${INDIVER}.tar.gz \
      | tar --strip-components=1 -xzC /app/ \
   && mkdir -p /app/build/indi-core \
   && cd /app/build/indi-core \
@@ -36,12 +37,12 @@ RUN mkdir -p /app/ \
   && make \
   && make install
 # build the 3rd party libraries and drivers
-COPY indi-3rdparty-1.9.4-indi-celestronaux-auxproto-cstddef.patch /tmp/
+COPY patches /tmp/patches
 RUN mkdir -p /app3p/ \
-  && curl -SL https://github.com/indilib/indi-3rdparty/archive/refs/tags/v${INDIVER}.tar.gz \
+  && curl -sSL https://github.com/indilib/indi-3rdparty/archive/refs/tags/v${INDIVER}.tar.gz \
      | tar --strip-components=1 -xzC /app3p/ \
   && cd /app3p/ \
-  && patch -p1 < /tmp/indi-3rdparty-1.9.4-indi-celestronaux-auxproto-cstddef.patch \
+  && cat /tmp/patches/*.patch | patch -p1 \
   && mkdir -p /app3p/build/indi-3rdparty-lib \
   && cd /app3p/build/indi-3rdparty-lib \
   && cmake -DBUILD_LIBS=1 $FLAGS ../../. . \
